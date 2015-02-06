@@ -1,0 +1,12 @@
+package connected;
+
+public class connected extends Thread {
+
+	public connected() {
+	}
+	
+	public void run(){
+		
+	}
+
+}

@@ -1,0 +1,191 @@
+/**
+ * 
+ */
+package server;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import utils.Constants;
+import utils.Users;
+import message.Message;
+
+/**
+ * @author edicson
+ *
+ */
+public class ProcessClient extends Thread {
+	
+	private Socket socket = null;
+	private Clients clientes = Clients.getInstance();
+	private DataInputStream inputData;
+    private DataOutputStream outputData;
+//	private boolean proccessUser = true;
+	private Users users = Users.getInstance();
+	
+	public ProcessClient(Socket socket) {
+		this.socket = socket;
+		try {
+			inputData = new DataInputStream(socket.getInputStream());
+            outputData = new DataOutputStream(socket.getOutputStream());
+            clientes.getClientes().put(String.valueOf(this.getId()), outputData);
+            System.out.println("Cliente creado con el ID " + this.getId());
+            getConnected();
+        } catch (IOException ex) {
+        	System.out.println("Error al crear los stream de entrada y salida : " + ex.getMessage());
+        }
+		this.start();
+	}
+	
+	public void run(){//Threads are just used to read information.
+		 System.out.println("Cliente con la IP " + socket.getInetAddress().getHostName() + " conectado."  + this.getId());
+		 boolean conectado = true;
+			while (conectado) {
+			 try {
+				 	if(inputData.available() > 0){
+//				 		System.out.println("inputData.available(): " + inputData.available());
+						 String messageInput = inputData.readUTF();
+			             if(messageInput != null && messageInput.length() > 0){
+//			             	System.out.println("mensajeRecibido en ProcessClient: " + messageInput);
+			             	Message message = processMessage(messageInput);
+			             	if(message != null){
+			             		DataOutputStream out = clientes.getClientes().get(String.valueOf(message.getIDDestiny()));
+			             		if(message.getType().equalsIgnoreCase("getConnected")){
+			             			out.writeUTF(message.getJsonObjectMessage().toJSONString());
+			             		}else{
+					             	if(clientes.getClientes().containsKey(String.valueOf(message.getIDDestiny()))){
+//					             		DataOutputStream out = clientes.getClientes().get(String.valueOf(message.getIDDestiny()));
+					             		out = clientes.getClientes().get(String.valueOf(message.getIDDestiny()));
+					             		System.out.println("se va a enviar esto: " + message.getJsonObjectMessage().toJSONString());
+					                	out.writeUTF(message.getJsonObjectMessage().toJSONString());
+					                	if(message.getType().equalsIgnoreCase("autentication")){
+					                		JSONObject jSONObject = (JSONObject) message.getJsonObjectMessage();
+					                		if(jSONObject.get("answer").toString().equalsIgnoreCase("refuse")){
+					                			conectado = false;
+					                		}else if(jSONObject.get("answer").toString().equalsIgnoreCase("ok")){
+					                			informConectedUsers();
+					                		}
+					                	}
+					                }
+					             }
+			             	}
+			             }
+				 	}
+	         } catch (IOException ex) {
+	        	 conectado = false;
+	        	 ex.printStackTrace();
+	         	 System.out.println("Error al crear los stream de entrada y salida : " + ex.getMessage());
+	         }
+		}
+			try {
+				System.out.println("Cierra conexion al socket ....");
+				inputData.close();
+				outputData.close();
+				socket.close();
+				clientes.getClientes().remove(String.valueOf(this.getId()));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	}
+	
+	public Message processMessage(String message){
+		Message messageResponse = null;
+		try {
+    		JSONParser parser = new JSONParser();
+    		Object obj = parser.parse(message);
+    		JSONObject jSONObject = (JSONObject) obj;
+//    		System.out.println("typeMessage: " + jSONObject.get("typeMessage").toString());
+			switch (jSONObject.get("typeMessage").toString()) {
+			case "autentication":
+				if(validatUser(jSONObject.get("user").toString(),jSONObject.get("password").toString())){
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("idSession", this.getId());
+					jsonObject.put("answer", "ok");
+					jsonObject.put("type", "autentication");
+					messageResponse = new Message(this.getId(),"autentication", jsonObject);
+				}else {
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("idSession", this.getId());
+					jsonObject.put("answer", "refuse");
+					jsonObject.put("type", "autentication");
+					messageResponse = new Message(this.getId(),"autentication", jsonObject);
+				}
+				break;
+			case "logoff":
+				clientes.getClientes().remove(jSONObject.get("idSession").toString());
+				messageResponse = null;
+				break;
+			case "getConnected":
+				messageResponse = new Message(this.getId(),"getConnected", getConnected());
+				break;
+			case "message":
+				messageResponse = new Message(Long.parseLong(jSONObject.get("IDDestiny").toString()),"message", jSONObject);
+				break;
+			default:
+				String[] partes = message.split(":");
+				System.out.println("Parte 0:" + partes[0]+":");
+				System.out.println("Parte 1: " + partes[1]+":");
+				messageResponse = new Message(Long.parseLong(partes[0]),partes[1]);
+			}
+		} catch (ArrayIndexOutOfBoundsException ex){
+			return new Message(this.getId(),"Su mensaje no traia destinatario, no es posible procesarlo");
+		} catch (NumberFormatException ex){
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return new Message(this.getId(),"Su mensaje no traia destinatario, no es posible procesarlo");
+		}
+		return messageResponse;
+    }
+	
+	public JSONObject getConnected(){
+		JSONArray connectedUsers = new JSONArray();
+		connectedUsers.addAll(clientes.getClientes().keySet());
+		JSONObject jSONObject = new JSONObject();
+		jSONObject.put("typeMessage", "getConnected");
+		jSONObject.put("connectedUsers", connectedUsers);
+		System.out.println("connectedUsers: " + jSONObject);
+		
+//		JSONArray msg = (JSONArray) jSONObject.get("connectedUsers");
+//		Iterator<String> iterator = msg.iterator();
+//		while (iterator.hasNext()) {
+//			System.out.println("--> "+iterator.next());
+//		}
+		return jSONObject;
+	}
+	
+	public void informConectedUsers(){
+		JSONObject jSONObject = getConnected();
+		Iterator<String> it = clientes.getClientes().keySet().iterator();
+		while(it.hasNext()){
+			String key = it.next();
+			try {
+				clientes.getClientes().get(key).writeUTF(jSONObject.toJSONString());
+			} catch (IOException e) {
+				e.printStackTrace();
+				clientes.getClientes().remove(key);
+			}
+		}
+	}
+	
+	public boolean validatUser(String user, String password){
+		try {
+			if(users.getKey("user."+user).equals(password)) return true;
+		}catch (java.util.MissingResourceException ex){
+			System.out.println("Error: " + ex.getMessage());
+		}
+		return false;
+	}
+
+}

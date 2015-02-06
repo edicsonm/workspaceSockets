@@ -1,0 +1,37 @@
+import java.net.ServerSocket;
+import java.net.Socket;
+
+
+public class Server {
+
+	public static void main(String[] args) {
+		 // Carga el archivo de configuracion de log4J
+        int puerto = 1234;
+        ServerSocket servidor = null;
+        Socket socket = null;
+        try {
+            servidor = new ServerSocket(puerto);
+            while (true) {
+                System.out.println("Servidor a la espera de conexiones.");
+                socket = servidor.accept();
+                System.out.println("Cliente con la IP " + socket.getInetAddress().getHostName() + " conectado.");
+                
+                ConexionCliente cc = new ConexionCliente(socket, mensajes);
+                cc.start();
+                
+            }
+        } catch (IOException ex) {
+            log.error("Error: " + ex.getMessage());
+        } finally{
+            try {
+                socket.close();
+                servidor.close();
+            } catch (IOException ex) {
+                log.error("Error al cerrar el servidor: " + ex.getMessage());
+            }
+        }
+    }
+
+	}
+
+}

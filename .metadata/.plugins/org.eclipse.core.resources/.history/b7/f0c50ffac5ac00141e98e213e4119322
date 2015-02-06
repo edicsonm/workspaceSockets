@@ -1,0 +1,9 @@
+package connected;
+
+public class connected {
+
+	public connected() {
+		// TODO Auto-generated constructor stub
+	}
+
+}

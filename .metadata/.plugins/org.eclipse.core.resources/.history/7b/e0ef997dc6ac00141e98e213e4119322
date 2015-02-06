@@ -1,0 +1,27 @@
+package connected;
+
+import org.json.simple.JSONObject;
+
+import socket.ClientSocket;
+
+public class connected extends Thread {
+	private boolean execute = true;
+	ClientSocket clientSocket;
+	
+	public connected(ClientSocket clientSocket ) {
+		this.clientSocket = 
+	}
+	
+	public void run(){
+		while(execute){
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.put("typeMessage", "getConnected");
+			clientSocket.outputData.writeUTF(jsonObject.toString());
+		}
+	}
+	
+	public void stopThread(){
+		execute = false;
+	}
+
+}

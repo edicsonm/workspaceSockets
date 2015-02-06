@@ -1,0 +1,13 @@
+package connected;
+
+public class connected extends Thread {
+
+	public connected() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	public void run(){
+		
+	}
+
+}

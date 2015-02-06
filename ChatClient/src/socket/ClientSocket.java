@@ -1,0 +1,126 @@
+package socket;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.Iterator;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
+import javax.swing.JTextArea;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import window.Cliente;
+import message.Message;
+
+public class ClientSocket extends Thread{
+	
+	public Socket socket;
+	public DataInputStream inputData;
+    public DataOutputStream outputData;
+	public boolean conected = true;
+	private Cliente cliente;
+	
+	public ClientSocket(Cliente cliente) throws IOException {
+    	this.cliente = cliente;
+    	try {
+    		socket = new Socket ("localhost", 1234);
+        	System.out.println ("Conectado");
+    		inputData = new DataInputStream(socket.getInputStream());
+    		outputData = new DataOutputStream(socket.getOutputStream());
+        } catch (IOException ex) {
+        	System.out.print("Error al crear los stream de entrada y salida : " + ex.getMessage());
+        	throw ex;
+        }
+    }
+    
+    public void run() {//Threads are just used to read information.
+        try {
+        	while (conected) {
+                String valor = inputData.readUTF();
+                processMessage(valor);
+//                while(valor != null){
+//                	System.out.println("mensajeRecibido: " + valor);
+//                	chatRoom.append(valor+"\n");
+//                	chatRoom.repaint();
+//                	valor = inputData.readUTF();
+//                }
+            }
+        } catch (IOException ex) {
+        	System.out.println("Error: " + ex.getMessage());
+        	conected = false;
+        } finally{
+            try {
+            	System.out.println("Cerrando socket ....");
+            	socket.close();
+                conected = false;
+            } catch (IOException ex) {
+            	System.out.println("Error al cerrar el servidor: " + ex.getMessage());
+            	conected = false;
+            }
+        }
+    }
+    
+    public boolean isConected() {
+		return conected;
+	}
+
+	public void setConected(boolean conected) {
+		this.conected = conected;
+	}
+	
+	public void stopClient(String idClient){
+		try {
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.put("typeMessage", "logoff");
+			jsonObject.put("idSession", idClient);
+			outputData.writeUTF(jsonObject.toString());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		conected = false;
+	}
+	
+	public Message processMessage(String messageJson){
+		Message message = new Message();
+//		System.out.println("messageJson: " + messageJson);
+		try {
+			JSONParser parser = new JSONParser();
+			Object obj = parser.parse(messageJson);
+			JSONObject jSONObject = (JSONObject) obj;
+			switch (jSONObject.get("typeMessage").toString()) {
+			case "autentication":
+				String idSession = jSONObject.get("idSession").toString();
+				String answer = jSONObject.get("answer").toString();
+				String type = jSONObject.get("typeMessage").toString();
+				break;
+			case "getConnected":
+				connectedUsers((JSONArray) jSONObject.get("connectedUsers"));
+				break;
+			default:
+				cliente.getChatRoom().append(jSONObject.get("origen").toString()+" said: " + jSONObject.get("message").toString() + "\n");
+				cliente.getChatRoom().repaint();
+				break;
+			}
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return message;
+	}
+	
+	public void connectedUsers(JSONArray jSONArray){
+		cliente.getModelListConnected().removeAllElements();
+		Iterator<String> iterator = jSONArray.iterator();
+		while (iterator.hasNext()) {
+			String userConnnected = iterator.next();
+			if(!cliente.getId().equalsIgnoreCase(userConnnected)) cliente.getModelListConnected().addElement(userConnnected);
+		}
+		
+	}
+    
+}

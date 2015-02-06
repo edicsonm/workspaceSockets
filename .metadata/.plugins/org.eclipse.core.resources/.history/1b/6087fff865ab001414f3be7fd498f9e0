@@ -1,0 +1,12 @@
+package mensaje;
+
+public class Message {
+	
+	private long IDDestiny;
+	private String message;
+	
+	public Message(long IDDestiny, String message){
+		this.IDDestiny = IDDestiny;
+		this.message = message;
+	}
+}

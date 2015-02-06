@@ -1,0 +1,32 @@
+package message;
+
+import org.json.simple.JSONObject;
+
+public class Message {
+	
+	private long IDDestiny;
+	private String message;
+	private JSONObject jsonObjectMessage;
+	
+	public Message(long IDDestiny, String message){
+		this.IDDestiny = IDDestiny;
+		this.message = message;
+	}
+	
+	public long getIDDestiny() {
+		return IDDestiny;
+	}
+
+	public void setIDDestiny(long iDDestiny) {
+		IDDestiny = iDDestiny;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+}

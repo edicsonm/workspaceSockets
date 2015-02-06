@@ -1,0 +1,10 @@
+package message;
+
+import org.json.simple.JSONObject;
+
+public class Message {
+	
+	private String type;
+	private JSONObject jsonObjectMessage;
+
+}

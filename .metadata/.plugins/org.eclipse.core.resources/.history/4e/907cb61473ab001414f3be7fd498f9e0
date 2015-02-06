@@ -1,0 +1,31 @@
+
+public class Users {
+	private static Users instance;
+	public static ResourceBundle resourceBundle = ResourceBundle.getBundle("au.com.billingbuddy.properties.ConfigurationApplication");
+	
+	public static Users getInstance() {
+		if (instance == null) {
+			instance = new Users();
+		}
+		return instance;
+	}
+	
+	private Users() {}
+
+	public ParamConfigSist obtenerParamConfigSist() {
+		ResourceBundle rb = ResourceBundle.getBundle("sat.credicard.comunes.archivos.config.configuracion_sistema");
+		ParamConfigSist pcs = new ParamConfigSist();
+
+		pcs.setDatasrc(rb.getString("datasrc"));
+		pcs.setDatasrc400(rb.getString("datasrc400"));
+		return pcs;
+		// end-user-code
+	}
+	
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

@@ -1,0 +1,9 @@
+package connected;
+
+public class connected implements Thread {
+
+	public connected() {
+		// TODO Auto-generated constructor stub
+	}
+
+}

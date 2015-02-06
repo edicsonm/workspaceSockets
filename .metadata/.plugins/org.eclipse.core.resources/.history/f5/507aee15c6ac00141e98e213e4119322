@@ -1,0 +1,12 @@
+package connected;
+
+public class connected extends Thread {
+	private execute = true;
+	public connected() {
+	}
+	
+	public void run(){
+		while(execute){}
+	}
+
+}

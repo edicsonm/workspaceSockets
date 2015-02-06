@@ -1,0 +1,18 @@
+
+public class Users {
+	private static Users instance;
+	public static Users getInstance() {
+		if (instance == null) {
+			instance = new Users();
+		}
+		return instance;
+	}
+	
+	private Users() {}
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

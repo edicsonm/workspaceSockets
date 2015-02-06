@@ -1,0 +1,23 @@
+import java.util.ResourceBundle;
+
+
+public class Users {
+	private static Users instance;
+	public static ResourceBundle resourceBundle = ResourceBundle.getBundle("Users");
+	
+	public static Users getInstance() {
+		if (instance == null) {
+			instance = new Users();
+		}
+		return instance;
+	}
+	
+	private Users() {}
+
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

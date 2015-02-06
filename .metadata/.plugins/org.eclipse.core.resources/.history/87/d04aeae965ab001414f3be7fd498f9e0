@@ -1,0 +1,25 @@
+package mensaje;
+
+public class Message {
+	
+	private long IDDestino;
+	private String message;
+	
+	public Message(long IDDestino, String mensaje){
+		this.IDDestino = IDDestino;
+		this.mensaje = mensaje;
+	}
+	
+	public long getIDDestino() {
+		return IDDestino;
+	}
+	public void setIDDestino(long iDDestino) {
+		IDDestino = iDDestino;
+	}
+	public String getMensaje() {
+		return mensaje;
+	}
+	public void setMensaje(String mensaje) {
+		this.mensaje = mensaje;
+	}
+}
